@@ -151,7 +151,7 @@ class API(object):
     """
 
     def __init__(self, access_token, environment="practice",
-                 headers=None, request_params=None):
+                 headers=None, request_params=None, session=requests.Session()):
         """Instantiate an instance of OandaPy's API wrapper.
 
         Parameters
@@ -197,7 +197,7 @@ class API(object):
             self.environment = environment
 
         self.access_token = access_token
-        self.client = requests.Session()
+        self.client = session  # () #requests.Session()
         self.client.stream = False
         self._request_params = request_params if request_params else {}
 
@@ -232,6 +232,9 @@ class API(object):
         except requests.RequestException as err:
             logger.error("request %s failed [%s]", url, err)
             raise err
+        else:
+            if response.__class__.__name__ == 'Future':
+                return response
 
         # Handle error responses
         if response.status_code >= 400:
@@ -304,6 +307,9 @@ class API(object):
 
             response = self.__request(method, url,
                                       request_args, headers=headers)
+            if response.__class__.__name__ == 'Future':
+                return response
+
             content = response.content.decode('utf-8')
             content = json.loads(content)
 
